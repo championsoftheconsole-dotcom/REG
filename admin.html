@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<h2>Registrations — Admin Panel</h2>
+
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Proof</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+
+const SUPABASE_URL = "https://waiawcfisyswzztialqb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhaWF3Y2Zpc3lzd3p6dGlhbHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NDcyNTUsImV4cCI6MjA4NTMyMzI1NX0.N5lWVziuEryRWmPEZWpjNXUggYRjD9GtLEqxPI2Pk2o";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+loadData();
+
+async function loadData() {
+
+  const { data, error } = await client
+    .from("tournament_registrations")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.log(error);
+    alert("Load error");
+    return;
+  }
+
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+
+  data.forEach(r => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.phone}</td>
+        <td><a href="${r.payment_proof_url}" target="_blank">View</a></td>
+        <td>${r.status}</td>
+        <td>
+          <button onclick="updateStatus('${r.id}','approved')">Approve</button>
+          <button onclick="updateStatus('${r.id}','rejected')">Reject</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function updateStatus(id, status) {
+
+  await client
+    .from("tournament_registrations")
+    .update({ status: status })
+    .eq("id", id);
+
+  loadData();
+}
+
+</script>
+
+</body>
+</html>
